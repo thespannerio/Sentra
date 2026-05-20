@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Sentra — Smart CCTV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@200;300;400;500;600&family=DM+Sans:wght@200;300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0f;--bg1:#111118;--bg2:#18181f;--bg3:#1e1e28;--bg4:#252532;--bg5:#2d2d3d;
+  --border:rgba(255,255,255,.06);--border1:rgba(255,255,255,.1);--border2:rgba(255,255,255,.18);
+  --t0:#ffffff;--t1:#e8e8f0;--t2:rgba(232,232,240,.6);--t3:rgba(232,232,240,.35);--t4:rgba(232,232,240,.15);
+  --blue:#4f9eff;--blue-dim:rgba(79,158,255,.12);--blue-ring:rgba(79,158,255,.28);
+  --green:#34d399;--green-dim:rgba(52,211,153,.1);--green-ring:rgba(52,211,153,.25);
+  --red:#f87171;--red-dim:rgba(248,113,113,.1);--red-ring:rgba(248,113,113,.25);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,.1);--amber-ring:rgba(251,191,36,.25);
+  --violet:#a78bfa;--sky:#38bdf8;
+  --r8:8px;--r12:12px;--r16:16px;--r20:20px;--r24:24px;--r32:32px;
+  --f:'DM Sans',-apple-system,'SF Pro Display',sans-serif;
+  --blur:blur(40px) saturate(1.8);
+  --ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:15px;height:100%;-webkit-text-size-adjust:100%}
+body{font-family:var(--f);background:var(--bg);color:var(--t1);min-height:100dvh;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 5%, rgba(79,158,255,.055) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 85% 92%, rgba(167,139,250,.05) 0%,transparent 55%),
+    radial-gradient(ellipse 35% 25% at 80% 12%, rgba(52,211,153,.04) 0%,transparent 52%)}
+
+.app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100dvh;
+  max-width:1400px;margin:0 auto;padding:0 16px}
+
+/* ── TOPBAR ── */
+.nav{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;
+  position:sticky;top:0;z-index:300;
+  background:rgba(10,10,15,.78);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border-bottom:1px solid var(--border);margin:0 -16px;padding-left:16px;padding-right:16px}
+.logo{display:flex;align-items:center;gap:11px}
+.logo-gem{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;
+  background:linear-gradient(145deg,#2563eb 0%,#4f9eff 50%,#818cf8 100%);
+  box-shadow:0 0 0 1px rgba(79,158,255,.3),0 4px 16px rgba(79,158,255,.18)}
+.logo-gem svg{width:16px;height:16px;fill:#fff}
+.logo-text .name{font-size:.96rem;font-weight:600;letter-spacing:-.02em;color:var(--t0)}
+.logo-text .sub{font-size:.58rem;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-top:1px}
+.nav-pills{display:flex;gap:2px;background:var(--bg2);border-radius:999px;padding:3px;border:1px solid var(--border)}
+.np{padding:6px 16px;border-radius:999px;font-size:.72rem;font-weight:500;
+  color:var(--t3);cursor:pointer;border:none;background:transparent;
+  transition:all .2s var(--ease);font-family:var(--f)}
+.np:hover{color:var(--t2)}
+.np.active{color:var(--t0);background:var(--bg4);box-shadow:0 1px 6px rgba(0,0,0,.4)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.conn-chip{display:flex;align-items:center;gap:8px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r32);
+  padding:5px 6px 5px 12px;transition:border-color .25s;min-width:0}
+.conn-chip:focus-within{border-color:var(--blue-ring)}
+.orb{width:7px;height:7px;border-radius:50%;background:var(--bg5);flex-shrink:0;transition:all .4s}
+.orb.on{background:var(--green);box-shadow:0 0 8px rgba(52,211,153,.7)}
+.orb.warn{background:var(--red);box-shadow:0 0 8px rgba(248,113,113,.7);animation:blink 1s infinite}
+.ip-input{background:transparent;border:none;color:var(--t1);font-family:var(--f);
+  font-size:.74rem;font-weight:500;width:110px;outline:none;font-variant-numeric:tabular-nums}
+.ip-input::placeholder{color:var(--t4)}
+.btn-connect{background:var(--blue);border:none;border-radius:999px;color:#fff;
+  font-family:var(--f);font-size:.72rem;font-weight:600;
+  padding:6px 14px;cursor:pointer;transition:all .2s var(--ease);white-space:nowrap;letter-spacing:-.01em}
+.btn-connect:hover{filter:brightness(1.1);transform:scale(1.02)}
+.btn-connect:active{transform:scale(.96)}
+.btn-demo{background:var(--bg2);border:1px solid var(--border1);border-radius:999px;
+  color:var(--t2);font-family:var(--f);font-size:.72rem;font-weight:500;
+  padding:6px 14px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-demo:hover{background:var(--bg3);color:var(--t1)}
+.btn-demo.on{background:var(--amber-dim);border-color:var(--amber-ring);color:var(--amber)}
+
+/* ── LAYOUT ── */
+.grid{display:grid;grid-template-columns:1fr 292px;gap:14px;padding:16px 0 40px;align-items:start}
+
+/* ── CARD ── */
+.card{background:rgba(17,17,24,.85);border:1px solid var(--border);border-radius:var(--r24);
+  overflow:hidden;backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);
+  transition:border-color .3s var(--ease)}
+.card:hover{border-color:var(--border1)}
+.card.alert{border-color:rgba(248,113,113,.4)!important;box-shadow:0 0 40px rgba(248,113,113,.07)}
+.card-head{display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px 11px;border-bottom:1px solid var(--border)}
+.card-label{font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+
+/* ── VIDEO PANEL ── */
+.feed-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px}
+.feed-cam{display:flex;align-items:center;gap:10px}
+.cam-name{font-size:.72rem;font-weight:600;letter-spacing:.04em;color:var(--t2);text-transform:uppercase}
+.live-badge{display:none;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;
+  border:1px solid var(--red-ring);background:var(--red-dim);
+  font-size:.57rem;font-weight:700;letter-spacing:.1em;color:var(--red)}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1.2s infinite}
+.feed-actions{display:flex;gap:5px}
+.action-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:var(--r12);
+  border:1px solid var(--border);background:rgba(255,255,255,.025);cursor:pointer;
+  color:var(--t3);transition:all .2s;flex-shrink:0}
+.action-btn:hover{background:rgba(255,255,255,.07);color:var(--t2);border-color:var(--border1);transform:scale(1.05)}
+.action-btn:active{transform:scale(.92)}
+.action-btn.on-blue{background:var(--blue-dim);border-color:var(--blue-ring);color:var(--blue)}
+.action-btn.on-amber{background:var(--amber-dim);border-color:var(--amber-ring);color:var(--amber)}
+
+/* ── VIEWPORT ── */
+.viewport{position:relative;background:#000;aspect-ratio:16/9;overflow:hidden}
+.viewport canvas{display:none;width:100%;height:100%;object-fit:cover}
+.viewport img.stream{display:none;width:100%;height:100%;object-fit:cover}
+.feed-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;background:var(--bg1)}
+.ph-icon{width:60px;height:60px;border-radius:18px;background:var(--bg3);display:grid;
+  place-items:center;opacity:.35}
+.ph-icon svg{width:28px;height:28px;fill:var(--t2)}
+.ph-text{font-size:.73rem;color:var(--t3);font-weight:400;letter-spacing:.02em;text-align:center;padding:0 30px;line-height:1.6}
+
+/* ── HUD ── */
+.hud{position:absolute;inset:0;pointer-events:none;display:none}
+.hud-inner{position:absolute;inset:0;padding:12px 14px;
+  display:flex;flex-direction:column;justify-content:space-between}
+.hud-top{display:flex;justify-content:space-between;align-items:flex-start}
+.hud-bottom{display:flex;justify-content:space-between;align-items:flex-end}
+.htime{font-size:.65rem;font-weight:500;color:rgba(255,255,255,.65);
+  background:rgba(0,0,0,.45);border-radius:6px;padding:3px 9px;
+  font-variant-numeric:tabular-nums;letter-spacing:.03em;backdrop-filter:blur(8px)}
+.motion-meter{display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.48);border-radius:8px;padding:6px 11px;backdrop-filter:blur(8px)}
+.mm-label{font-size:.55rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.38)}
+.mm-track{width:72px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.mm-fill{height:100%;width:0%;border-radius:2px;transition:width .5s var(--ease),background .4s}
+.mm-pct{font-size:.64rem;font-weight:600;color:var(--blue);min-width:30px;text-align:right;
+  font-variant-numeric:tabular-nums;transition:color .3s}
+.detect-tag{font-size:.57rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  padding:4px 11px;border-radius:999px;transition:all .35s;
+  background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.45);backdrop-filter:blur(8px)}
+.detect-tag.motion{color:var(--amber);border-color:var(--amber-ring);background:rgba(251,191,36,.12)}
+.detect-tag.person{color:var(--red);border-color:var(--red-ring);background:rgba(248,113,113,.12);animation:blink 1.8s infinite}
+.corner{position:absolute;width:18px;height:18px}
+.corner.tl{top:10px;left:10px;border-top:1.5px solid rgba(255,255,255,.18);border-left:1.5px solid rgba(255,255,255,.18);border-radius:3px 0 0 0}
+.corner.tr{top:10px;right:10px;border-top:1.5px solid rgba(255,255,255,.18);border-right:1.5px solid rgba(255,255,255,.18);border-radius:0 3px 0 0}
+.corner.bl{bottom:10px;left:10px;border-bottom:1.5px solid rgba(255,255,255,.18);border-left:1.5px solid rgba(255,255,255,.18);border-radius:0 0 0 3px}
+.corner.br{bottom:10px;right:10px;border-bottom:1.5px solid rgba(255,255,255,.18);border-right:1.5px solid rgba(255,255,255,.18);border-radius:0 0 3px 0}
+
+/* ── FEED FOOTER ── */
+.feed-footer{display:flex;align-items:center;gap:8px;padding:10px 16px;
+  border-top:1px solid var(--border);flex-wrap:wrap}
+.pill-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;
+  font-family:var(--f);font-size:.72rem;font-weight:500;cursor:pointer;
+  border:1px solid var(--border1);background:rgba(255,255,255,.04);
+  color:var(--t2);transition:all .22s var(--ease);white-space:nowrap;letter-spacing:-.01em}
+.pill-btn:hover{background:rgba(255,255,255,.08);border-color:var(--border2);color:var(--t1);transform:translateY(-1px)}
+.pill-btn:active{transform:translateY(0) scale(.97)}
+.pill-btn.recording{background:var(--red-dim);border-color:var(--red-ring);color:var(--red);animation:blink 1.5s infinite}
+.pill-btn.danger{background:var(--red-dim);border-color:var(--red-ring);color:var(--red)}
+.pill-btn.danger:hover{background:rgba(248,113,113,.18)}
+.spacer{flex:1}
+.uptime-text{font-size:.62rem;color:var(--t3);font-variant-numeric:tabular-nums;font-weight:400}
+
+/* ── SIDEBAR ── */
+.sidebar{display:flex;flex-direction:column;gap:12px}
+
+/* ── BATTERY ── */
+.battery-body{padding:18px}
+.battery-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.bv-big{font-size:2rem;font-weight:200;letter-spacing:-.06em;line-height:1;
+  font-variant-numeric:tabular-nums;transition:color .4s}
+.bv-unit{font-size:.6rem;font-weight:600;color:var(--t3);letter-spacing:.07em;margin-top:4px}
+.bp-big{font-size:2.4rem;font-weight:200;letter-spacing:-.07em;line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--green);transition:color .4s}
+.b-status{font-size:.58rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  padding:3px 10px;border-radius:999px;background:var(--green-dim);
+  border:1px solid var(--green-ring);color:var(--green);transition:all .4s}
+.arc-wrap{display:flex;justify-content:center;margin:2px 0 14px}
+.bat-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-top:4px}
+.bat-bar{height:100%;border-radius:3px;background:var(--green);width:0%;transition:width .9s var(--ease),background .5s}
+
+/* ── SENSOR TILES ── */
+.tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.tile{background:var(--bg1);padding:13px 14px;display:flex;flex-direction:column;gap:5px;
+  cursor:default;transition:background .2s}
+.tile:hover{background:var(--bg2)}
+.tile-label{font-size:.55rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3)}
+.tile-val{font-size:1.5rem;font-weight:200;letter-spacing:-.05em;color:var(--t1);
+  line-height:1;font-variant-numeric:tabular-nums;transition:color .3s}
+.tile-unit{font-size:.56rem;color:var(--t3);font-weight:400}
+.c-blue{color:var(--blue)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-amber{color:var(--amber)}.c-sky{color:var(--sky)}.c-violet{color:var(--violet)}
+.sensor-rows{padding:2px 0}
+.sensor-row{display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;border-bottom:1px solid var(--border)}
+.sensor-row:last-child{border-bottom:none}
+.sensor-left{display:flex;align-items:center;gap:10px}
+.sensor-icon{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+.sensor-name{font-size:.77rem;font-weight:500;color:var(--t1)}
+.sensor-desc{font-size:.58rem;color:var(--t3);margin-top:1px}
+.sensor-right{text-align:right}
+.sensor-val{font-size:.9rem;font-weight:600;color:var(--t1);font-variant-numeric:tabular-nums}
+.sensor-bar-wrap{width:54px;height:2.5px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin:5px 0 0 auto}
+.sensor-bar{height:100%;border-radius:2px;transition:width .6s var(--ease),background .4s}
+.sd-detail{padding:13px 14px;border-top:1px solid var(--border)}
+.sd-row{display:flex;justify-content:space-between;margin-bottom:7px}
+.sd-l{font-size:.6rem;color:var(--t3);font-weight:400}
+.sd-v{font-size:.6rem;color:var(--t2);font-weight:600;font-variant-numeric:tabular-nums}
+.sd-track{height:3px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.sd-fill{height:100%;border-radius:3px;transition:width .8s var(--ease),background .5s}
+
+/* ── RING GAUGE ── */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;padding:20px 14px 14px;gap:14px}
+.ring-outer{position:relative;width:116px;height:116px;flex-shrink:0}
+.ring-svg{width:116px;height:116px;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:rgba(255,255,255,.05);stroke-width:7}
+.ring-prog{fill:none;stroke-width:7;stroke-linecap:round;stroke:var(--blue);
+  stroke-dasharray:302;stroke-dashoffset:302;
+  transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1),stroke .5s}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px}
+.ring-pct{font-size:1.55rem;font-weight:200;letter-spacing:-.06em;color:var(--t0);
+  font-variant-numeric:tabular-nums;line-height:1}
+.ring-sub{font-size:.52rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.info-chip{display:flex;align-items:center;justify-content:space-between;
+  width:100%;padding:9px 13px;background:var(--bg2);border-radius:var(--r12);
+  border:1px solid var(--border)}
+.ic-label{font-size:.66rem;color:var(--t3);font-weight:400}
+.ic-val{font-size:.73rem;font-weight:600;color:var(--t2);transition:color .3s}
+.ic-val.motion{color:var(--amber)}.ic-val.person{color:var(--red)}
+
+/* ── ANNOUNCEMENT ── */
+.ann-body{padding:14px}
+.speaker-status{display:flex;align-items:center;gap:6px}
+.spk-dot{width:6px;height:6px;border-radius:50%;background:var(--bg5);transition:all .3s}
+.spk-dot.ready{background:var(--green)}
+.spk-dot.speaking{background:var(--blue);animation:blink .5s infinite}
+.spk-text{font-size:.61rem;color:var(--t3);font-weight:400;transition:color .3s}
+.quick-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px}
+.qchip{padding:5px 12px;border-radius:999px;border:1px solid var(--border1);
+  background:rgba(255,255,255,.04);color:var(--t2);
+  font-size:.64rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:var(--f)}
+.qchip:hover{background:rgba(255,255,255,.09);color:var(--t1);border-color:var(--border2);transform:translateY(-1px)}
+.ann-textarea{width:100%;background:var(--bg2);border:1px solid var(--border1);border-radius:var(--r12);
+  color:var(--t1);font-family:var(--f);font-size:.77rem;line-height:1.55;
+  padding:11px 13px;outline:none;resize:none;min-height:68px;transition:border-color .2s}
+.ann-textarea::placeholder{color:var(--t4)}
+.ann-textarea:focus{border-color:var(--blue-ring)}
+.ann-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.char-count{font-size:.63rem;color:var(--t3)}
+.char-count.warn{color:var(--red)}
+.btn-speak{display:flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,#2563eb 0%,#4f9eff 50%,#818cf8 100%);
+  border:none;border-radius:999px;color:#fff;font-family:var(--f);
+  font-size:.73rem;font-weight:600;padding:9px 18px;cursor:pointer;
+  transition:all .2s var(--ease);letter-spacing:-.01em}
+.btn-speak:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-speak:active{transform:scale(.97)}
+.btn-speak:disabled{background:var(--bg4);color:var(--t4);cursor:not-allowed;transform:none;filter:none}
+
+/* ── CONTROLS ── */
+.controls-body{padding:4px 14px 12px}
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-bottom:1px solid var(--border)}
+.ctrl-row:last-child{border-bottom:none;padding-bottom:0}
+.ctrl-name{font-size:.79rem;font-weight:500;color:var(--t1)}
+.ctrl-desc{font-size:.6rem;color:var(--t3);margin-top:1px}
+.toggle{position:relative;width:44px;height:26px;cursor:pointer;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.tgl-track{position:absolute;inset:0;background:var(--bg4);border-radius:999px;
+  border:1px solid rgba(255,255,255,.07);transition:background .25s}
+.toggle input:checked+.tgl-track{background:var(--blue)}
+.tgl-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.5);
+  transition:transform .25s var(--spring)}
+.toggle input:checked+.tgl-track .tgl-thumb{transform:translateX(18px)}
+
+/* ── TOASTS ── */
+.toast-stack{position:fixed;top:72px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{display:flex;align-items:flex-start;gap:12px;
+  background:rgba(17,17,24,.97);border:1px solid rgba(255,255,255,.09);border-radius:var(--r20);
+  padding:13px 15px;min-width:278px;max-width:340px;pointer-events:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,.9);animation:slide-in .36s var(--spring)}
+.toast.tw{border-color:var(--red-ring)}.toast.ti{border-color:var(--blue-ring)}.toast.tok{border-color:var(--green-ring)}
+.toast-ico{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:14px;flex-shrink:0;font-weight:600}
+.toast.tw .toast-ico{background:var(--red-dim);color:var(--red)}
+.toast.ti .toast-ico{background:var(--blue-dim);color:var(--blue)}
+.toast.tok .toast-ico{background:var(--green-dim);color:var(--green)}
+.toast-body{flex:1;min-width:0}
+.toast-title{font-size:.79rem;font-weight:600;color:var(--t0);margin-bottom:3px}
+.toast-msg{font-size:.7rem;color:var(--t2);line-height:1.4}
+.toast-close{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.06);
+  display:grid;place-items:center;cursor:pointer;flex-shrink:0;
+  font-size:10px;color:var(--t3);transition:all .15s;margin-top:2px}
+.toast-close:hover{background:rgba(255,255,255,.13);color:var(--t2)}
+.demo-banner{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:rgba(251,191,36,.1);border:1px solid var(--amber-ring);border-radius:999px;
+  color:var(--amber);font-size:.65rem;font-weight:600;letter-spacing:.08em;
+  padding:7px 22px;display:none;z-index:9998;backdrop-filter:var(--blur);
+  animation:fade-up .4s var(--spring)}
+.demo-banner.on{display:block}
+
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes slide-in{from{opacity:0;transform:translateX(20px) scale(.93)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes slide-out{to{opacity:0;transform:translateX(20px) scale(.92)}}
+@keyframes fade-up{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes pulse-orb{0%,100%{opacity:1}50%{opacity:.4}}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .grid{grid-template-columns:1fr}
+  .sidebar{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sidebar>*:first-child{grid-column:1/-1}
+}
+@media(max-width:720px){
+  .app{padding:0 12px}
+  .nav{padding-left:12px;padding-right:12px;margin:0 -12px}
+  .nav-pills{display:none}
+  .ip-input{width:82px}
+  .btn-connect{padding:5px 11px;font-size:.68rem}
+  .btn-demo{padding:5px 10px;font-size:.68rem}
+  .sidebar{grid-template-columns:1fr}
+  .feed-footer{gap:6px}
+  .pill-btn{padding:6px 11px;font-size:.68rem}
+  .bv-big{font-size:1.65rem}
+  .bp-big{font-size:2rem}
+}
+@media(max-width:440px){
+  .ip-input{width:68px}
+  .btn-demo{display:none}
+}
+@media(min-width:1025px) and (max-width:1200px){
+  .grid{grid-template-columns:1fr 270px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOPBAR -->
+<nav class="nav">
+  <div class="logo">
+    <div class="logo-gem">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+    </div>
+    <div class="logo-text">
+      <div class="name">Sentra</div>
+      <div class="sub">Smart CCTV</div>
+    </div>
+  </div>
+  <div class="nav-pills">
+    <button class="np active">Live</button>
+    <button class="np">Status</button>
+  </div>
+  <div class="nav-right">
+    <div class="conn-chip">
+      <div class="orb" id="corb"></div>
+      <input class="ip-input" id="eip" type="text" placeholder="192.168.x.x" value="192.168.1.100" spellcheck="false"/>
+      <button class="btn-connect" onclick="go()">Connect</button>
+    </div>
+    <button class="btn-demo" id="dbtn" onclick="toggleDemo()">Demo</button>
+  </div>
+</nav>
+
+<!-- MAIN GRID -->
+<div class="grid">
+
+  <!-- VIDEO FEED -->
+  <div class="card" id="fp">
+    <div class="feed-header">
+      <div class="feed-cam">
+        <span class="cam-name">CAM 01 · Front Door</span>
+        <div class="live-badge" id="lt"><div class="live-dot"></div>Live</div>
+      </div>
+      <div class="feed-actions">
+        <div class="action-btn" id="irico" onclick="tIR()" title="IR Night Vision">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+        <div class="action-btn on-amber" id="aaico" onclick="tAutoIR()" title="Auto IR">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2v-2H2v2zm18 0h2v-2h-2v2zM11 2v2h2V2h-2zm0 18v2h2v-2h-2zM5.99 4.58l-1.41 1.41 1.06 1.06 1.41-1.41zm12.37 12.37l-1.41 1.41 1.06 1.06 1.41-1.41zm1.06-10.96l-1.06-1.06-1.41 1.41 1.06 1.06zm-14.81 9.54l1.06 1.06 1.41-1.41-1.06-1.06z"/></svg>
+        </div>
+        <div class="action-btn" onclick="tSnap()" title="Snapshot">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.05-9.5H19l-2-2H7L5 6H5C3.86 6 3 6.86 3 7.95v10.1C3 19.14 3.86 20 4.95 20h14.1c1.09 0 1.95-.86 1.95-1.95V7.95C21 6.86 20.14 6 19.05 6z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="viewport" id="vpw">
+      <canvas id="dc"></canvas>
+      <img id="si" class="stream" alt="stream"/>
+      <div class="feed-placeholder" id="fph">
+        <div class="ph-icon"><svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11z"/></svg></div>
+        <div class="ph-text">Enter your ESP32-S3 IP address above to connect to the live feed</div>
+      </div>
+
+      <div class="hud" id="hud">
+        <div class="hud-inner">
+          <div class="hud-top"><div></div><div class="htime" id="htime">--:--:--</div></div>
+          <div class="hud-bottom">
+            <div class="motion-meter">
+              <span class="mm-label">Motion</span>
+              <div class="mm-track"><div class="mm-fill" id="mf"></div></div>
+              <span class="mm-pct" id="mn">0%</span>
+            </div>
+            <div class="detect-tag" id="abt">Idle</div>
+          </div>
+        </div>
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+      </div>
+    </div>
+
+    <div class="feed-footer">
+      <button class="pill-btn" id="rb" onclick="tRec()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+        Record
+      </button>
+      <button class="pill-btn danger" onclick="fSiren()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        Siren
+      </button>
+      <div class="spacer"></div>
+      <span class="uptime-text" id="upt">Offline</span>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- BATTERY -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-label">Battery</span>
+        <div class="orb" id="sorb"></div>
+      </div>
+      <div class="battery-body">
+        <div class="battery-top">
+          <div>
+            <div class="bv-big" id="bvv">—</div>
+            <div class="bv-unit">Volts · LiPo 3.7V</div>
+          </div>
+          <div style="text-align:right">
+            <div class="bp-big" id="bpp">—%</div>
+            <div class="b-status" id="btag">—</div>
+          </div>
+        </div>
+        <div class="arc-wrap">
+          <svg width="160" height="90" viewBox="0 0 160 90" style="overflow:visible">
+            <path d="M 10 85 A 70 70 0 0 1 150 85" fill="none" stroke="rgba(255,255,255,.055)" stroke-width="8" stroke-linecap="round"/>
+            <path id="barc" d="M 10 85 A 70 70 0 0 1 150 85" fill="none" stroke="#34d399"
+              stroke-dasharray="220" stroke-dashoffset="220" stroke-width="8" stroke-linecap="round"
+              style="transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1),stroke .5s"/>
+          </svg>
+        </div>
+        <div class="bat-bar-wrap">
+          <div id="bbar" class="bat-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENSORS -->
+    <div class="card">
+      <div class="card-head"><span class="card-label">Sensors</span></div>
+      <div class="tile-grid">
+        <div class="tile"><div class="tile-label">Motion</div><div class="tile-val c-blue" id="tm">0</div><div class="tile-unit">percent</div></div>
+        <div class="tile"><div class="tile-label">Recording</div><div class="tile-val c-green" id="trec">Off</div><div class="tile-unit">status</div></div>
+        <div class="tile"><div class="tile-label">SD Free</div><div class="tile-val c-sky" id="tsd">—</div><div class="tile-unit">GB</div></div>
+        <div class="tile"><div class="tile-label">Vision</div><div class="tile-val" id="tvis">Day</div><div class="tile-unit">mode</div></div>
+      </div>
+      <div class="sensor-rows">
+        <div class="sensor-row">
+          <div class="sensor-left">
+            <div class="sensor-icon" style="background:rgba(251,191,36,.1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2v-2H2v2zm18 0h2v-2h-2v2zM11 2v2h2V2h-2zm0 18v2h2v-2h-2zM5.99 4.58l-1.41 1.41 1.06 1.06 1.41-1.41zm12.37 12.37l-1.41 1.41 1.06 1.06 1.41-1.41zm1.06-10.96l-1.06-1.06-1.41 1.41 1.06 1.06zm-14.81 9.54l1.06 1.06 1.41-1.41-1.06-1.06z"/></svg>
+            </div>
+            <div>
+              <div class="sensor-name">Ambient Light</div>
+              <div class="sensor-desc" id="lmd">Day mode</div>
+            </div>
+          </div>
+          <div class="sensor-right">
+            <div class="sensor-val" id="slux">— lx</div>
+            <div class="sensor-bar-wrap"><div class="sensor-bar" id="lbar" style="background:#fbbf24"></div></div>
+          </div>
+        </div>
+        <div class="sensor-row">
+          <div class="sensor-left">
+            <div class="sensor-icon" style="background:rgba(56,189,248,.1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#38bdf8"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+            </div>
+            <div>
+              <div class="sensor-name">Sound Level</div>
+              <div class="sensor-desc" id="sndd">Quiet</div>
+            </div>
+          </div>
+          <div class="sensor-right">
+            <div class="sensor-val" id="ssnd">0%</div>
+            <div class="sensor-bar-wrap"><div class="sensor-bar" id="sbar" style="background:#38bdf8"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="sd-detail">
+        <div class="sd-row"><span class="sd-l">SD Card usage</span><span class="sd-v" id="sdpct">— %</span></div>
+        <div class="sd-track"><div class="sd-fill" id="sdf" style="background:var(--green)"></div></div>
+      </div>
+    </div>
+
+    <!-- MOTION INDEX -->
+    <div class="card">
+      <div class="card-head"><span class="card-label">Motion Index</span></div>
+      <div class="ring-wrap">
+        <div class="ring-outer">
+          <svg class="ring-svg" viewBox="0 0 116 116">
+            <circle class="ring-track" cx="58" cy="58" r="48"/>
+            <circle class="ring-prog" id="rp" cx="58" cy="58" r="48"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-pct" id="rpc">0%</div>
+            <div class="ring-sub">index</div>
+          </div>
+        </div>
+        <div class="info-chip"><span class="ic-label">Activity</span><span class="ic-val" id="iva">Idle</span></div>
+        <div class="info-chip"><span class="ic-label">Alert Status</span><span class="ic-val" id="ival">Clear</span></div>
+        <div class="info-chip"><span class="ic-label">Continuous</span><span class="ic-val" id="ivc">No</span></div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENT -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-label">Announcement</span>
+        <div class="speaker-status">
+          <div class="spk-dot" id="so"></div>
+          <span class="spk-text" id="st2">Speaker off</span>
+        </div>
+      </div>
+      <div class="ann-body">
+        <div class="quick-chips">
+          <div class="qchip" onclick="qa('Attention. Motion detected.')">Motion</div>
+          <div class="qchip" onclick="qa('Recording active.')">Rec On</div>
+          <div class="qchip" onclick="qa('Please stay out of this area.')">Stay Out</div>
+          <div class="qchip" onclick="qa('Security alert.')">Alert</div>
+          <div class="qchip" onclick="qa('Welcome. Have a safe day.')">Welcome</div>
+          <div class="qchip" onclick="qa('Area under surveillance.')">Notice</div>
+        </div>
+        <textarea class="ann-textarea" id="att" rows="3"
+          placeholder="Type announcement… Ctrl+Enter to send"
+          maxlength="95" oninput="updateCharCount()"></textarea>
+        <div class="ann-footer">
+          <span class="char-count" id="charCount">95 left</span>
+          <button class="btn-speak" id="asnd" onclick="sendAnn()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+            Speak
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="card">
+      <div class="card-head"><span class="card-label">Controls</span></div>
+      <div class="controls-body">
+        <div class="ctrl-row">
+          <div>
+            <div class="ctrl-name">Auto Night Vision</div>
+            <div class="ctrl-desc">IR activates in dark</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="tauto" checked onchange="cmd('autoIR/'+(this.checked?'on':'off'))"/>
+            <div class="tgl-track"><div class="tgl-thumb"></div></div>
+          </label>
+        </div>
+        <div class="ctrl-row">
+          <div>
+            <div class="ctrl-name">IR LED Manual</div>
+            <div class="ctrl-desc">Override infrared</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="tir" onchange="cmd('ir/'+(this.checked?'on':'off'))"/>
+            <div class="tgl-track"><div class="tgl-thumb"></div></div>
+          </label>
+        </div>
+        <div class="ctrl-row">
+          <div>
+            <div class="ctrl-name">Continuous Recording</div>
+            <div class="ctrl-desc">Always save to SD</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="trec2" checked onchange="cmd(this.checked?'record/start':'record/stop')"/>
+            <div class="tgl-track"><div class="tgl-thumb"></div></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+</div><!-- /grid -->
+</div><!-- /app -->
+
+<div class="toast-stack" id="ts"></div>
+<div class="demo-banner" id="dstr">Demo Mode · All sensors simulated</div>
+
+<script>
+'use strict';
+let IP='192.168.1.100',conn=false,demo=false,isRec=false,isIR=false,isAutoIR=true,isSpeaking=false;
+let pollT=null,demoT=null,draf=null;
+let S={motion:0,activity:'idle',lux:500,sound:0,night:false,ir:false,autoIR:true,
+  recording:false,alert:false,continuous:false,spkReady:false,micReady:false,
+  alsReady:false,vbat:0,batPct:0,sdFreeGB:0,sdTotalGB:0,timestamp:'',uptime:0};
+const $=id=>document.getElementById(id);
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const fmtUp=s=>s<60?s+'s':s<3600?Math.floor(s/60)+'m'+(s%60)+'s':Math.floor(s/3600)+'h'+Math.floor((s%3600)/60)+'m';
+const R=(a,b)=>a+Math.random()*(b-a);
+
+function updateCharCount(){
+  const rem=95-$('att').value.length;
+  const el=$('charCount');
+  el.textContent=rem+' left';
+  el.className='char-count'+(rem<15?' warn':'');
+}
+
+function go(){
+  const ip=$('eip').value.trim();if(!ip)return;IP=ip;if(demo)stopDemo();
+  const si=$('si');
+  si.onerror=()=>toast('Connection Failed','Cannot reach '+IP,'w');
+  si.src='http://'+IP+'/stream';si.style.display='block';
+  $('fph').style.display='none';$('hud').style.display='block';$('lt').style.display='flex';
+  conn=true;setOn();startPoll();
+}
+function setOn(){$('corb').className='orb on';$('sorb').className='orb on';}
+function setOff(){
+  conn=false;$('corb').className='orb';$('sorb').className='orb';
+  $('si').style.display='none';$('fph').style.display='flex';
+  $('hud').style.display='none';$('lt').style.display='none';
+  $('upt').textContent='Offline';if(pollT){clearInterval(pollT);pollT=null;}
+}
+function startPoll(){if(pollT)clearInterval(pollT);pollT=setInterval(fetchData,1800);fetchData();}
+async function fetchData(){
+  if(!conn)return;
+  try{const r=await fetch('http://'+IP+'/data',{signal:AbortSignal.timeout(2500)});
+    if(!r.ok)return;S={...S,...await r.json()};renderUI();}catch{}
+}
+
+function renderUI(){
+  const m=Math.round(S.motion),act=S.activity||'idle';
+  const mc=m>70?'var(--red)':m>40?'var(--amber)':'var(--blue)';
+  $('mf').style.cssText='width:'+m+'%;background:'+mc;
+  $('mn').style.cssText='color:'+mc;$('mn').textContent=m+'%';
+  const abt=$('abt');abt.textContent=cap(act);abt.className='detect-tag'+(act!=='idle'?' '+act:'');
+  const c=302,off=c-(m/100)*c;
+  $('rp').style.strokeDashoffset=off;$('rp').style.stroke=mc;$('rpc').textContent=m+'%';
+  $('tm').textContent=m;$('tm').className='tile-val '+(m>70?'c-red':m>40?'c-amber':'c-blue');
+  $('trec').textContent=S.recording?'On':'Off';$('trec').className='tile-val '+(S.recording?'c-red':'c-green');
+  $('tsd').textContent=(S.sdFreeGB||0)>0?S.sdFreeGB.toFixed(1):'—';
+  $('tvis').textContent=S.ir?'Night':'Day';$('tvis').className='tile-val'+(S.ir?' c-blue':'');
+  const bp=S.batPct||0,bv=S.vbat||0;
+  const bc=bp>50?'var(--green)':bp>20?'var(--amber)':'var(--red)';
+  $('bvv').style.color=bc;$('bvv').textContent=bv>0?bv.toFixed(2)+'V':'—';
+  $('bpp').style.color=bc;$('bpp').textContent=bp>0?bp+'%':'—%';
+  $('bbar').style.cssText='width:'+bp+'%;background:'+bc;
+  $('barc').style.strokeDashoffset=(220-(bp/100)*220);
+  $('barc').setAttribute('stroke',bp>50?'#34d399':bp>20?'#fbbf24':'#f87171');
+  const btag=$('btag');
+  const bs=bp>80?'Full':bp>50?'Good':bp>20?'Low':'Critical';
+  if(bp>0){
+    btag.textContent=bs;
+    const [col,bg,bdr]=bp>50?['var(--green)','var(--green-dim)','var(--green-ring)']:
+      bp>20?['var(--amber)','var(--amber-dim)','var(--amber-ring)']:['var(--red)','var(--red-dim)','var(--red-ring)'];
+    btag.style.cssText='color:'+col+';background:'+bg+';border-color:'+bdr;
+  }
+  if(bp>0&&bp<15&&!window._lbw){window._lbw=true;toast('Battery Critical',bp+'% ('+bv.toFixed(2)+'V) — charge soon','w');}
+  const lux=S.lux,lp=Math.min(100,lux/1000*100);
+  $('slux').textContent=lux<9000?Math.round(lux)+' lx':'—';
+  $('lbar').style.width=lp+'%';
+  const ld=lux<10?'Night — very dark':lux<50?'Night — dim':lux<150?'Dusk / indoor':lux<500?'Bright indoor':'Daylight';
+  $('lmd').textContent=S.alsReady?ld:'Sensor not ready';
+  $('lmd').style.color=lux<50?'var(--amber)':'var(--t3)';
+  const snd=Math.round(S.sound||0);$('ssnd').textContent=snd+'%';$('sbar').style.width=snd+'%';
+  $('sbar').style.background=snd>70?'var(--red)':snd>40?'var(--amber)':'var(--sky)';
+  $('sndd').textContent=S.micReady?(snd>70?'Very loud':snd>40?'Loud':snd>15?'Moderate':'Quiet'):'Mic not ready';
+  const tot=S.sdTotalGB||0,free=S.sdFreeGB||0;
+  if(tot>0){const p=Math.round((tot-free)/tot*100);
+    $('sdf').style.width=p+'%';
+    $('sdf').style.background=p>90?'var(--red)':p>75?'var(--amber)':'var(--green)';
+    $('sdpct').textContent=p+'%';}
+  else $('sdpct').textContent='No card';
+  const ia=$('iva');ia.textContent=cap(act);ia.className='ic-val'+(act!=='idle'?' '+act:'');
+  $('ival').textContent=S.alert?'Active':'Clear';$('ival').style.color=S.alert?'var(--red)':'var(--green)';
+  $('ivc').textContent=S.continuous?'Yes':'No';$('ivc').style.color=S.continuous?'var(--amber)':'var(--t2)';
+  isRec=S.recording;const rb=$('rb');
+  rb.className='pill-btn'+(isRec?' recording':'');
+  rb.innerHTML=isRec?
+    '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>Stop':'<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>Record';
+  isIR=S.ir;isAutoIR=S.autoIR!==undefined?S.autoIR:isAutoIR;
+  $('irico').className='action-btn'+(isIR?' on-blue':'');
+  $('aaico').className='action-btn'+(isAutoIR?' on-amber':'');
+  $('tir').checked=isIR;$('tauto').checked=isAutoIR;
+  const spkR=S.spkReady||demo;
+  $('so').className='spk-dot'+(isSpeaking?' speaking':spkR?' ready':'');
+  $('st2').textContent=isSpeaking?'Speaking…':spkR?'Ready':'Not detected';
+  $('st2').style.color=isSpeaking?'var(--blue)':spkR?'var(--green)':'var(--t3)';
+  $('asnd').disabled=!spkR&&!demo;
+  $('fp').classList.toggle('alert',!!S.alert);
+  if(S.alert&&!window._pa)toast(act==='person'?'Person Detected':'Motion Alert',
+    act==='person'?'Person in frame.':'High motion — '+m+'%.','w');
+  window._pa=S.alert;
+  $('upt').textContent='Up '+fmtUp(S.uptime||0);
+  $('htime').textContent=S.timestamp||new Date().toLocaleTimeString();
+}
+
+async function cmd(c){
+  if(demo){dcmd(c);return;}
+  if(!conn){toast('Not Connected','Connect to ESP32 first.','w');return;}
+  try{
+    const r=await fetch('http://'+IP+'/control?cmd='+encodeURIComponent(c),{signal:AbortSignal.timeout(5000)});
+    const j=await r.json().catch(()=>({}));
+    if(!j.ok)toast('Command Failed','ESP returned: '+JSON.stringify(j),'w');
+  }catch(err){toast('Connection Error','Could not reach '+IP,'w');}
+}
+function dcmd(c){
+  if(c.startsWith('record')){isRec=c.includes('start');S.recording=isRec;}
+  if(c==='ir/on'){isIR=true;S.ir=true;}if(c==='ir/off'){isIR=false;S.ir=false;}
+  if(c==='autoIR/on'){isAutoIR=true;S.autoIR=true;}if(c==='autoIR/off'){isAutoIR=false;S.autoIR=false;}
+  renderUI();
+}
+function tRec(){cmd(isRec?'record/stop':'record/start');}
+function tIR(){if(isAutoIR)cmd('autoIR/off');cmd(isIR?'ir/off':'ir/on');}
+function tAutoIR(){cmd(isAutoIR?'autoIR/off':'autoIR/on');}
+function tSnap(){
+  if(demo){toast('Snapshot','Saved to SD card.','ok');return;}
+  if(!conn)return;
+  const a=document.createElement('a');a.href='http://'+IP+'/snapshot';
+  a.download='sentra_'+Date.now()+'.jpg';a.click();
+}
+function fSiren(){
+  cmd('siren/on');toast('Siren Active','Alarm triggered. Stops in 3s.','w');
+  setTimeout(()=>cmd('siren/off'),3000);
+}
+function qa(t){$('att').value=t;updateCharCount();sendAnn();}
+async function sendAnn(){
+  const txt=$('att').value.trim();if(!txt)return;
+  if(txt.length>95){toast('Too long','Max 95 characters.','w');return;}
+  if(demo){
+    toast('Announcing','"'+txt.substring(0,50)+'"','ok');
+    isSpeaking=true;renderUI();
+    setTimeout(()=>{isSpeaking=false;renderUI();},Math.min(txt.length*90+1500,9000));return;
+  }
+  if(!conn){toast('Not Connected','Connect to ESP32 first.','w');return;}
+  const btn=$('asnd');btn.disabled=true;btn.textContent='Sending…';
+  isSpeaking=true;renderUI();
+  try{
+    const r=await fetch('http://'+IP+'/control?cmd=announce&text='+encodeURIComponent(txt),{signal:AbortSignal.timeout(5000)});
+    const j=await r.json().catch(()=>({}));
+    if(j.ok)toast('Announced','"'+txt.substring(0,45)+'…"','ok');
+    else toast('Announce Failed','ESP error.','w');
+  }catch{toast('Connection Error','Could not reach device.','w');}
+  btn.disabled=false;
+  btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Speak';
+  setTimeout(()=>{isSpeaking=false;renderUI();},txt.length*95+2000);
+}
+$('att').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();sendAnn();}});
+updateCharCount();
+
+function toast(ttl,msg,type='i'){
+  const tmap={w:'tw',i:'ti',ok:'tok'},imap={w:'✕',i:'i',ok:'✓'};
+  const ts=$('ts'),t=document.createElement('div');t.className='toast '+(tmap[type]||'ti');
+  t.innerHTML='<div class="toast-ico">'+imap[type]+'</div><div class="toast-body"><div class="toast-title">'+ttl+'</div><div class="toast-msg">'+msg+'</div></div><div class="toast-close" onclick="dimToast(this.closest(\'.toast\'))">×</div>';
+  ts.appendChild(t);setTimeout(()=>{if(t.parentElement)dimToast(t);},5500);
+}
+function dimToast(el){
+  if(!el||!el.parentElement)return;
+  el.style.animation='slide-out .28s forwards';
+  setTimeout(()=>el.remove(),280);
+}
+
+function toggleDemo(){demo?stopDemo():startDemo();}
+function startDemo(){
+  demo=true;conn=true;
+  $('dbtn').className='btn-demo on';$('dbtn').textContent='Stop Demo';
+  $('dstr').classList.add('on');setOn();
+  $('dc').style.display='block';$('fph').style.display='none';
+  $('si').style.display='none';$('hud').style.display='block';$('lt').style.display='flex';
+  S.spkReady=true;S.micReady=true;S.alsReady=true;S.vbat=3.72;S.batPct=52;
+  sizeCvs();demoT=setInterval(dTick,1800);draf=requestAnimationFrame(dRender);
+  toast('Demo Mode','All sensors are simulated.','i');
+}
+function stopDemo(){
+  demo=false;conn=false;$('dbtn').className='btn-demo';$('dbtn').textContent='Demo';
+  $('dstr').classList.remove('on');setOff();$('dc').style.display='none';
+  $('fph').style.display='flex';$('hud').style.display='none';
+  clearInterval(demoT);demoT=null;if(draf){cancelAnimationFrame(draf);draf=null;}
+}
+function sizeCvs(){const w=$('vpw');$('dc').width=w.clientWidth;$('dc').height=w.clientHeight;}
+window.addEventListener('resize',()=>{if(demo)sizeCvs();});
+
+const SC=[
+  {act:'idle',m:()=>R(0,6),lux:()=>R(300,800),dur:7000},
+  {act:'motion',m:()=>R(25,55),lux:()=>R(250,700),dur:5000},
+  {act:'person',m:()=>R(60,88),lux:()=>R(10,70),dur:4500},
+  {act:'idle',m:()=>R(0,8),lux:()=>R(40,120),dur:6000},
+  {act:'motion',m:()=>R(38,65),lux:()=>R(400,800),dur:3500}
+];
+let si2=0,st=0,dTm=4,dLux=500,bv=3.72;
+function dTick(){
+  const sc=SC[si2];dTm=sc.m();dLux=sc.lux();st+=1800;
+  if(st>sc.dur){st=0;si2=(si2+1)%SC.length;}
+  S.motion=S.motion+(dTm-S.motion)*.38;S.lux=S.lux+(dLux-S.lux)*.22;
+  S.sound=R(5,S.motion>50?72:28);S.night=S.lux<50;
+  S.ir=isIR||(isAutoIR&&S.lux<50);S.autoIR=isAutoIR;
+  S.uptime=(S.uptime||0)+2;S.activity=S.motion>55?'person':S.motion>20?'motion':'idle';
+  S.recording=isRec;S.alert=S.motion>70;S.continuous=S.motion>40;
+  S.timestamp=new Date().toLocaleTimeString();
+  S.sdFreeGB=13.6;S.sdTotalGB=16;bv-=0.00012;if(bv<3.0)bv=4.2;S.vbat=bv;
+  S.batPct=Math.round(Math.max(0,Math.min(100,(bv-3.0)/1.2*100)));renderUI();
+}
+let blobs=[];
+function dRender(){
+  draf=requestAnimationFrame(dRender);
+  const c=$('dc').getContext('2d');if(!c)return;
+  const W=$('dc').width,H=$('dc').height,night=S.ir||S.lux<50,ml=S.motion/100;
+  c.fillStyle=night?'#030710':'#0c0f1c';c.fillRect(0,0,W,H);
+  const id=c.createImageData(W,H);const px=id.data;const ni=night?20:9;
+  for(let i=0;i<px.length;i+=4){const n=(Math.random()-.5)*ni,b=night?10:20;
+    px[i]=b+n;px[i+1]=b+n*(night?.3:.82);px[i+2]=b+n*(night?.12:.7);px[i+3]=255;}
+  c.putImageData(id,0,0);
+  c.strokeStyle=night?'rgba(100,200,100,.05)':'rgba(255,255,255,.028)';c.lineWidth=.8;
+  c.beginPath();c.moveTo(0,H*.63);c.lineTo(W,H*.63);c.stroke();
+  c.beginPath();c.moveTo(0,H*.26);c.lineTo(W,H*.26);c.stroke();
+  c.strokeRect(W*.55,H*.26,W*.17,H*.37);c.strokeRect(W*.09,H*.28,W*.21,H*.34);
+  if(ml>.1){const nb=Math.floor(ml*3)+1;
+    while(blobs.length<nb)blobs.push({x:R(.1,.85),y:R(.3,.58),w:R(.06,.08+ml*.18),
+      h:R(.18,.3+ml*.1),vx:(Math.random()-.5)*.0022,vy:(Math.random()-.5)*.0008,a:R(.4,.78)});
+    while(blobs.length>nb)blobs.pop();
+    for(const b of blobs){b.x+=b.vx+(Math.random()-.5)*.004*ml;b.y+=b.vy;
+      b.x=Math.max(.04,Math.min(.9,b.x));b.y=Math.max(.26,Math.min(.58,b.y));
+      const bx=b.x*W,by=b.y*H,bw=b.w*W,bh=b.h*H;
+      const col=night?`rgba(140,255,140,${b.a*ml})`:`rgba(255,196,104,${b.a*ml*.6})`;
+      const g=c.createRadialGradient(bx,by,0,bx,by,bw);g.addColorStop(0,col);g.addColorStop(1,'transparent');
+      c.fillStyle=g;c.beginPath();c.ellipse(bx,by+bh/2,bw/2,bh/2,0,0,Math.PI*2);c.fill();}}
+  else blobs=[];
+  if(night){const v=c.createRadialGradient(W/2,H/2,H*.2,W/2,H/2,H);
+    v.addColorStop(0,'transparent');v.addColorStop(1,'rgba(0,0,0,.55)');c.fillStyle=v;c.fillRect(0,0,W,H);}
+  c.fillStyle='rgba(255,255,255,.24)';c.font='400 11px DM Sans,system-ui,monospace';
+  c.fillText('SENTRA · CAM01 · '+new Date().toLocaleTimeString(),12,H-11);
+  if(night){c.fillStyle='rgba(100,255,100,.6)';c.font='600 10px DM Sans,monospace';c.fillText('IR',W-22,H-11);}
+  if(S.recording){c.fillStyle='rgba(248,113,113,.85)';c.fillText('REC',W-48,13);}
+}
+setInterval(()=>{if(conn||demo)$('htime').textContent=new Date().toLocaleTimeString();},1000);
+</script>
+</body>
+</html>
